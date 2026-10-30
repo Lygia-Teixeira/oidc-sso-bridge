@@ -1,0 +1,28 @@
+{
+  "name": "oidc-sso-bridge",
+  "version": "0.1.0",
+  "description": "Ponte OIDC que autentica usuarios de uma aplicacao legada (SQLite, somente leitura) para qualquer Relying Party OIDC - exemplo com Vaultwarden.",
+  "license": "MIT",
+  "author": "Lygia Teixeira",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "keys": "node scripts/generate-keys.js",
+    "seed": "node scripts/seed-demo-db.js",
+    "ticket": "node scripts/issue-launch-ticket.js",
+    "check": "node --check src/index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "3.0.3",
+    "better-sqlite3": "13.0.3",
+    "express": "4.22.3",
+    "express-rate-limit": "8.7.0",
+    "nodemailer": "10.0.13",
+    "oidc-provider": "9.12.2"
+  }
+}

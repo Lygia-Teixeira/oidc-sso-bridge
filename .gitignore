@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.*
+!.env.example
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+data/
+keys/
+launch-demo.html
+npm-debug.log*

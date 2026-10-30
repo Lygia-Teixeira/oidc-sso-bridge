@@ -1,0 +1,55 @@
+# Laboratorio LOCAL: Vaultwarden + ponte OIDC. Nao use como esta em producao
+# (sem TLS; em producao coloque ambos atras de um proxy reverso HTTPS).
+#
+# Pre-requisitos:
+#   1. npm run keys   -> cole os valores no .env
+#   2. npm run seed   -> cria data/legacy-demo.db
+#   3. no arquivo hosts da maquina: 127.0.0.1 sso-bridge
+#      (o MESMO issuer precisa ser resolvido pelo navegador e pelo container
+#       do Vaultwarden; dentro da rede do compose "sso-bridge" e o servico)
+#   4. no .env: OIDC_ISSUER=http://sso-bridge:3000
+#
+# Referencia das variaveis SSO: SSO.md do repositorio do Vaultwarden.
+
+services:
+  sso-bridge:
+    build: .
+    env_file: .env
+    environment:
+      # Laboratorio sem TLS: o modo production exige https em todas as URLs.
+      NODE_ENV: development
+      LEGACY_DB_PATH: /data/legacy-demo.db
+      JWKS_PATH: /keys/jwks.json
+    volumes:
+      - ./data:/data:ro      # base legada montada SOMENTE LEITURA
+      - ./keys:/keys:ro
+    ports:
+      - "127.0.0.1:3000:3000"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  vaultwarden:
+    # SSO via OpenID Connect existe no Vaultwarden a partir da serie 1.35.x;
+    # confira as notas de versao e fixe por digest em uso real.
+    image: vaultwarden/server:1.35.2
+    depends_on: [sso-bridge]
+    environment:
+      DOMAIN: "http://localhost:8080"
+      SIGNUPS_ALLOWED: "false"
+      SSO_ENABLED: "true"
+      SSO_ONLY: "false"
+      SSO_AUTHORITY: "http://sso-bridge:3000"
+      SSO_CLIENT_ID: "${RP_CLIENT_ID}"
+      SSO_CLIENT_SECRET: "${RP_CLIENT_SECRET}"
+      SSO_SCOPES: "email profile"
+      SSO_PKCE: "true"
+    volumes:
+      - vw-data:/data
+    ports:
+      - "127.0.0.1:8080:80"
+    restart: unless-stopped
+
+volumes:
+  vw-data:
